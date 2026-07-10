@@ -276,30 +276,19 @@ async function loadLeaderboard() {
 }
 
 async function addLeaderboardEntry(name, countries, seconds) {
-  const score = countries * 1000 - seconds;
+  // Writes go through the submit-score Edge Function: it computes the score
+  // server-side (so it can't be forged), validates, and does the keep-best
+  // upsert. Direct table writes are blocked by Row Level Security; only reads
+  // are public. The function returns the fresh top-10 to render.
   try {
-    // Check if name already exists
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/COTE?name=eq.${encodeURIComponent(name)}&select=*`, { headers: SB_HEADERS });
-    const existing = res.ok ? await res.json() : [];
-    if (existing.length > 0) {
-      // Only insert new entry if new score is better (delete old, insert new)
-      if (score > existing[0].score) {
-        await fetch(`${SUPABASE_URL}/rest/v1/COTE?name=eq.${encodeURIComponent(name)}`, {
-          method: "DELETE",
-          headers: SB_HEADERS,
-        });
-        await fetch(`${SUPABASE_URL}/rest/v1/COTE`, {
-          method: "POST",
-          headers: { ...SB_HEADERS, "Prefer": "return=minimal" },
-          body: JSON.stringify({ name, countries, seconds, score }),
-        });
-      }
-    } else {
-      await fetch(`${SUPABASE_URL}/rest/v1/COTE`, {
-        method: "POST",
-        headers: { ...SB_HEADERS, "Prefer": "return=minimal" },
-        body: JSON.stringify({ name, countries, seconds, score }),
-      });
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/submit-score`, {
+      method: "POST",
+      headers: SB_HEADERS,
+      body: JSON.stringify({ game: "cote", name, countries, seconds }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.leaderboard)) return data.leaderboard;
     }
   } catch {}
   return loadLeaderboard();
