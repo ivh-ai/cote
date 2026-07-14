@@ -284,14 +284,13 @@ Rules:
 
 ## 15. Clipboard Sharing
 
-Existing share string:
+As-built share string (spoiler-free, no URL in the text):
 ```
 COTE 🌍 {count}/{TOTAL} countries in {mm:ss} ({mode} mode)
-Play at: cote.netlify.app
 ```
-- Copied via `navigator.clipboard.writeText`; button shows "Copied ✓" for 2.5s.
+- Copied via `navigator.clipboard.writeText` with an `execCommand` fallback (`lib/clipboard.ts`); button shows "Copied ✓".
 - **Spoiler-free** (no country names) — good (PRD FR-SHARE-1).
-- **Fixes for target:** the URL should match the actual deploy target (Vite `base:'/cote/'` → GitHub Pages, not netlify) — reconcile the canonical play URL in [07](07_TECHNICAL_ARCHITECTURE.md)/[DEPLOYMENT]. Provide a clipboard fallback for browsers without the Clipboard API (execCommand or a select-and-copy affordance). Announce success via `aria-live`.
+- **Canonical play URL:** the app is deployed on **Vercel** at **https://thecote.vercel.app** (Vite `base: '/'`). If a URL is reintroduced into the share text, use that.
 
 ---
 
