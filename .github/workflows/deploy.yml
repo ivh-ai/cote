@@ -26,6 +26,10 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      # Quality gates — a broken build never deploys (Blueprint §14.4).
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
       - run: npm run build
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3

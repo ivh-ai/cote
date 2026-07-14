@@ -1,0 +1,101 @@
+/* COTE design tokens — see 03_DESIGN_SYSTEM.md */
+:root {
+  /* Canvas & surfaces */
+  --canvas: #0b0a09;
+  --canvas-deep: #070605;
+  /* Warm sand-charcoal surfaces (lifted from cool charcoal for a warmer, brighter chrome) */
+  --surface-1: #211d18;
+  --surface-2: #2b261f;
+  --surface-3: #38322a;
+
+  /* Sand & stone (text/chrome) */
+  --sand-50: #f5f0e6;
+  --sand-100: #e8dfcf;
+  --sand-300: #c9bca1;
+  --stone-400: #9a9284;
+  --stone-600: #6b6459;
+  --linen: #ede6d6;
+
+  /* Ocean */
+  --ocean-300: #7fb2c4;
+  --ocean-500: #3e7c93;
+  --ocean-700: #25505e;
+  --ocean-900: #122b33;
+
+  /* Brass (single accent) */
+  --brass-300: #e8c06a;
+  --brass-400: #d9a441;
+  --brass-600: #a97c2c;
+
+  /* Semantic */
+  --success: #5fa463;
+  --success-bg: #12251a;
+  --warn: #d9a441;
+  --danger: #d46e54; /* AA on canvas (5.8) and danger-bg (5.1) for small text */
+  --danger-bg: #2a1512;
+
+  /* Radius */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-full: 999px;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Motion */
+  --dur-micro: 100ms;
+  --dur-fast: 200ms;
+  --dur-standard: 300ms;
+  --dur-expressive: 500ms;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Glass */
+  --glass-bg: rgba(41, 36, 29, 0.62);
+  --glass-border: rgba(245, 240, 230, 0.11);
+  --glass-blur: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--sand-50);
+  font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--surface-1) !important;
+  }
+}

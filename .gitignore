@@ -26,3 +26,9 @@ dist-ssr
 # Local tooling / CLI state (may contain keys)
 .claude/settings.local.json
 .netlify/
+
+# Test coverage
+coverage
+
+# Vercel
+.vercel
