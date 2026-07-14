@@ -111,4 +111,7 @@ Desktop-first and free to play. Globe geometry from [Natural Earth](https://www.
 
 ## License
 
-Not yet specified — add a `LICENSE` file before public release.
+**All rights reserved** — Copyright © 2026 Ishaan Hattangady. This code is
+source-available for viewing and reference only; it may not be copied,
+modified, redistributed, or used in other projects without permission. See
+[LICENSE](LICENSE).

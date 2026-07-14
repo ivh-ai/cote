@@ -1,0 +1,30 @@
+COTE — Countries of the Earth
+Copyright (c) 2026 Ishaan Hattangady. All rights reserved.
+
+This source code is made publicly available for viewing, reference, and
+portfolio purposes only. It is NOT open-source software.
+
+You MAY:
+  - View and read the source code in this repository.
+
+You MAY NOT, without prior written permission from the copyright holder:
+  - Copy, reproduce, or republish the code or any substantial portion of it.
+  - Modify, adapt, translate, or create derivative works based on it.
+  - Distribute, sublicense, sell, or host your own copy or build of it.
+  - Use the code, assets, or build output — in whole or in part — in any
+    other project, product, or service.
+
+All rights not expressly granted above are reserved by the copyright holder.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE
+USE OF THE SOFTWARE.
+
+Third-party dependencies and data retain their own licenses and are not
+covered by this notice — e.g. React, React Three Fiber, and Three.js (MIT);
+Natural Earth map data via world-atlas (public domain). Their terms govern
+their respective components.
+
+For permission requests, contact the copyright holder.
