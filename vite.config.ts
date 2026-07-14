@@ -5,7 +5,8 @@ import { fileURLToPath, URL } from 'node:url'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/cote/',
+  // Root-domain deploy (Vercel). For a subpath host, change this to '/<subpath>/'.
+  base: '/',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

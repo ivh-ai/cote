@@ -1,6 +1,6 @@
 # Deployment
 
-COTE is a static single-page app. It builds to `dist/` and is served as static files — no server runtime required. The reference deployment is **GitHub Pages**, automated via GitHub Actions.
+COTE is a static single-page app. It builds to `dist/` and is served as static files — no server runtime required. The reference deployment is **Vercel** (root-domain, `vercel.json` at the repo root).
 
 ---
 
@@ -12,7 +12,7 @@ npm run build     # → dist/
 ```
 
 Key build facts:
-- **Base path is `/cote/`** (`vite.config.ts`). If you deploy to a different path or a root domain, change `base` accordingly, or asset URLs will 404.
+- **Base path is `/`** (`vite.config.ts`) for a root-domain deploy (Vercel). If you deploy under a subpath, change `base` to `/<subpath>/`, or asset URLs will 404. The map data URL uses `import.meta.env.BASE_URL`, so it adapts automatically.
 - Output is chunked: `three` (R3F/Three.js), `react`, and the app are separate chunks (~314 KB gzipped total — within the < 400 KB budget).
 - Geo data is self-hosted at `public/data/countries-110m.json` and copied to `dist/data/` — no runtime CDN dependency for the map.
 
@@ -24,20 +24,23 @@ npm run preview
 
 ---
 
-## 2. GitHub Pages (automated)
+## 2. Vercel (reference deployment)
 
-A workflow at [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) deploys on every push to `main`:
+`vercel.json` at the repo root configures the Vite build and an SPA rewrite:
 
-1. Checkout → setup Node 20 → `npm ci`
-2. `npm run build`
-3. Upload `dist/` as a Pages artifact → `actions/deploy-pages`
+```json
+{ "framework": "vite", "buildCommand": "npm run build", "outputDirectory": "dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
+```
 
-**One-time setup:**
-1. Repo → **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-2. Ensure the repository name matches the `base` (`/cote/`) — i.e. the site serves at `https://<user>.github.io/cote/`. If your repo has a different name, update `base` in `vite.config.ts` to `/<repo-name>/`.
-3. Push to `main`. The Action builds and publishes; the environment URL appears in the Actions run.
+**One-time setup (done in your Vercel account — not by CI):**
+1. Vercel → **Add New… → Project → Import** the `ivh-ai/cote` GitHub repo.
+2. Framework preset auto-detects **Vite**; build `npm run build`, output `dist` (matches `vercel.json`).
+3. Deploy. Every push to `main` then auto-deploys; PRs get preview deployments.
 
-**Recommended hardening (not yet in the workflow):** add `npm run typecheck`, `npm test`, and `npm run lint` as steps *before* `npm run build` so a broken build never deploys (Blueprint §14.4 CI gates).
+No Supabase env vars are required in Vercel — the anon URL/key are public and embedded in the client (all write safety is in the database, §4). If you later move them to build-time vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_KEY`), set them in Vercel → Project → Settings → Environment Variables.
+
+Quality gates run in CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) on every push/PR (typecheck + lint + test + build).
 
 ---
 
@@ -55,10 +58,12 @@ Any static host works (Netlify, Vercel static, Cloudflare Pages, S3+CloudFront):
 The leaderboard uses Supabase. The anon URL and key are embedded in the client (`src/services/leaderboard.ts`) — this is expected; **the anon key is public by design and all write safety lives in the database** (Blueprint §16, [08_SUPABASE_SCHEMA.md](08_SUPABASE_SCHEMA.md)).
 
 ### Current state
-The client currently talks to a legacy `COTE` table via REST. This works but is **not cheat-resistant** (client-computed score, read-modify-write race).
+**The migrations are applied and verified live** (`supabase/migrations/0001–0004`): the `leaderboard` table, RLS (public read, no direct writes), and the `submit_score` anti-cheat RPC exist, with 7 rows backfilled from the legacy `COTE` table. The client (`services/leaderboard.ts`) uses the RPC path. Anti-cheat was verified rejecting an implausible score.
 
-### Required before public launch (P0 in [09_QA_REPORT.md](09_QA_REPORT.md))
-Apply the migrations from [08_SUPABASE_SCHEMA.md](08_SUPABASE_SCHEMA.md) §5–§9 to create:
+> Note: a prior effort also added a `submit-score` **Edge Function** on the same project (a different approach to the same goal). The rebuild uses the RPC; the Edge Function is now unused and can be removed at your discretion.
+
+### Migration reference
+The applied migrations (from [08_SUPABASE_SCHEMA.md](08_SUPABASE_SCHEMA.md) §5–§9) create:
 - the `leaderboard` table + indexes,
 - Row Level Security (read-only for anon; **no** direct writes),
 - the `submit_score` **security-definer RPC** (server-computed score, range + plausibility anti-cheat, atomic best-per-name upsert),
@@ -96,10 +101,11 @@ Because deploys are driven by `main`, rollback = revert the offending merge comm
 
 ## 7. Pre-deploy checklist
 
-- [ ] `npm run typecheck`, `npm test`, `npm run build` all green
-- [ ] `base` matches the deploy path
-- [ ] Supabase migrations applied (anti-cheat live) — see §4
-- [ ] Lighthouse: performance ≥ 90, accessibility = 100 (Blueprint §11)
-- [ ] Legacy `WorldCountriesGame.jsx` removed (QA §14)
-- [ ] Error boundary present (QA §10)
+- [x] `npm run typecheck`, `npm test`, `npm run build` all green
+- [x] `base` matches the deploy path (`/` for Vercel root domain)
+- [x] Supabase migrations applied (anti-cheat live) — see §4
+- [x] Lighthouse: performance 99, accessibility 100 (desktop) — QA §5
+- [x] Legacy `WorldCountriesGame.jsx` removed (QA §14)
+- [x] Error boundary present (QA §10)
+- [ ] Vercel project imported + connected to the repo (your account)
 - [ ] `LICENSE` added

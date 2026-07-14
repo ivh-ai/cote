@@ -41,10 +41,10 @@ See [07_TECHNICAL_ARCHITECTURE.md](07_TECHNICAL_ARCHITECTURE.md) for the full ra
 
 ```bash
 npm install
-npm run dev        # → http://localhost:5173/cote/
+npm run dev        # → http://localhost:5173/
 ```
 
-> Note the `/cote/` base path (configured for GitHub Pages).
+> Deploys to **Vercel** (root-domain base `/`, `vercel.json` at the repo root). See [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ### Scripts
 
