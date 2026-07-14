@@ -1,0 +1,208 @@
+/* COTE UI interaction styles — see 03_DESIGN_SYSTEM.md, 04_MOTION_SPECIFICATION.md */
+
+/* ── Glass ─────────────────────────────────────────────────────────────────── */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+  border: 1px solid var(--glass-border);
+}
+
+/* ── Focus ─────────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--ocean-300);
+  outline-offset: 3px;
+  border-radius: inherit;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────────── */
+.btn {
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background var(--dur-micro) var(--ease-out),
+    border-color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out), opacity var(--dur-micro) var(--ease-out);
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--brass-400);
+  color: var(--canvas-deep);
+  border: 1px solid var(--brass-400);
+  font-weight: 700;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--brass-300);
+  border-color: var(--brass-300);
+}
+.btn-secondary {
+  background: transparent;
+  color: var(--sand-100);
+  border: 1px solid var(--stone-600);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(245, 240, 230, 0.06);
+  border-color: var(--stone-400);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--sand-300);
+  border: 1px solid var(--glass-border);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(245, 240, 230, 0.06);
+  color: var(--sand-50);
+}
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+.btn-danger:hover:not(:disabled) {
+  background: var(--danger-bg);
+}
+
+/* ── Input ─────────────────────────────────────────────────────────────────── */
+.input {
+  font-family: inherit;
+  color: var(--sand-50);
+  background: var(--surface-2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  caret-color: var(--brass-400);
+  transition: border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+.input::placeholder {
+  color: var(--stone-400);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--ocean-500);
+  box-shadow: 0 0 0 3px rgba(126, 178, 196, 0.15);
+}
+.input-shake {
+  animation: cote-shake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  border-color: var(--danger) !important;
+}
+
+/* ── Tabs / rows ───────────────────────────────────────────────────────────── */
+.tab {
+  transition: color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+.tab:hover {
+  color: var(--sand-50);
+}
+.chip {
+  transition: background var(--dur-standard), color var(--dur-standard),
+    border-color var(--dur-standard);
+}
+.row-hover {
+  transition: background var(--dur-micro) var(--ease-out);
+}
+.row-hover:hover {
+  background: rgba(245, 240, 230, 0.04);
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────────── */
+@keyframes cote-badge-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+@keyframes cote-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes cote-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes cote-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes cote-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+@keyframes cote-timer-warn {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.badge-in {
+  animation: cote-badge-in var(--dur-fast) var(--ease-spring) both;
+}
+.modal-in {
+  animation: cote-modal-in 0.22s var(--ease-spring) both;
+}
+.fade-in {
+  animation: cote-fade-in var(--dur-standard) var(--ease-out) both;
+}
+.rise-in {
+  animation: cote-rise-in var(--dur-standard) var(--ease-out) both;
+}
+.timer-warn {
+  animation: cote-timer-warn 1s linear infinite;
+}
+.timer-critical {
+  animation: cote-timer-warn 0.4s linear infinite;
+  color: var(--danger) !important;
+}
+
+/* Custom scrollbars for panels */
+.scroll-thin::-webkit-scrollbar {
+  width: 8px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border-radius: 999px;
+}
