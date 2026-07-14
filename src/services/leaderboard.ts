@@ -36,12 +36,12 @@ function withTimeout(init: RequestInit = {}): { init: RequestInit; cancel: () =>
   return { init: { ...init, signal: controller.signal }, cancel: () => clearTimeout(timer) }
 }
 
-/** Fetch the top entries, ranked by score then time. Legacy COTE table (mode-less). */
+/** Fetch the top entries, ranked by score then time, from the hardened `leaderboard` table. */
 export async function getTop(limit = 10): Promise<Result<LeaderboardEntry[]>> {
   const { init, cancel } = withTimeout({ headers: HEADERS })
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/COTE?select=name,countries,seconds,score&order=score.desc,seconds.asc&limit=${limit}`,
+      `${SUPABASE_URL}/rest/v1/leaderboard?select=name,mode,countries,seconds,score&order=score.desc,seconds.asc&limit=${limit}`,
       init,
     )
     if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }

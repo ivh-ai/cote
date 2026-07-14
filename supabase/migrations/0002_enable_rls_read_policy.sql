@@ -10,5 +10,10 @@ create policy leaderboard_read
   to anon, authenticated
   using (true);
 
+-- Table-level privilege: RLS governs WHICH rows, but Postgres still requires a GRANT for the
+-- role to touch the table at all. (Tables created via raw SQL don't get this automatically the
+-- way dashboard-created tables do.) Grant read only — writes go through the RPC.
+grant select on public.leaderboard to anon, authenticated;
+
 -- No INSERT/UPDATE/DELETE policies are created, so RLS denies those to anon/authenticated.
 -- All writes go exclusively through the submit_score() security-definer RPC (migration 0003).
