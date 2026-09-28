@@ -25,6 +25,16 @@ export interface CountryGeo {
   centroid: THREE.Vector3
 }
 
+/**
+ * Normalize a TopoJSON feature id to the game's canonical form. Natural Earth
+ * zero-pads numeric ISO ids to 3 digits ("004", "036"); the country list uses
+ * unpadded ids ("4", "36"). Stripping leading zeros lets geometry ids match the
+ * found set and the TOPO_COLOR table so every mapped country colours when guessed.
+ */
+export function normalizeGeoId(raw: unknown): string {
+  return String(raw ?? '').replace(/^0+(?=\d)/, '')
+}
+
 /** lon/lat (degrees) → point on a sphere of the given radius. */
 export function lonLatToVec3(lon: number, lat: number, radius: number): THREE.Vector3 {
   const phi = (90 - lat) * DEG2RAD
@@ -141,7 +151,7 @@ export async function loadCountryGeometries(
 
   const result: CountryGeo[] = []
   for (const f of fc.features as Feature[]) {
-    const id = String(f.id ?? '')
+    const id = normalizeGeoId(f.id)
     if (!id) continue
     const name = (f.properties?.name as string) ?? id
     const polys = polygonsOf(f.geometry)
