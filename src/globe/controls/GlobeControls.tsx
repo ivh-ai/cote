@@ -1,6 +1,13 @@
 /**
- * Globe interaction: auto-spin, drag-rotate, double-click zoom, rotate-to, keyboard.
- * See 06_GLOBE_RENDERING_SPEC.md §14–§16. Loop runs in useFrame, decoupled from React.
+ * Globe interaction: auto-spin, drag-rotate (longitude + latitude), double-click
+ * zoom, rotate-to. See 06_GLOBE_RENDERING_SPEC.md §14–§16. Loop runs in useFrame,
+ * decoupled from React.
+ *
+ * Orientation is tracked as two scalars — yaw (spin around the world up axis) and
+ * pitch (tilt toward the poles) — and the group quaternion is rebuilt from them
+ * each frame as Rx(pitch)·Ry(yaw). Because roll is never introduced, the globe
+ * stays upright at any latitude: horizontal drag pans longitude, vertical drag
+ * pans latitude, and the meridians stay vertical on screen.
  */
 import { useEffect, useRef } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
@@ -12,12 +19,15 @@ export interface ControlsApi {
   reset(): void
 }
 
-const Y_AXIS = new THREE.Vector3(0, 1, 0)
-const FRONT = new THREE.Vector3(0, 0, 1)
 const AUTO_SPIN = 0.0009
 const MIN_Z = 1.6
 const MAX_Z = 3.2
 const ZOOM_IN_Z = 1.9
+// Clamp latitude tilt just short of the poles so the view never flips over.
+const PITCH_MAX = 1.45 // ~83°
+const TWO_PI = Math.PI * 2
+
+const clampPitch = (p: number) => THREE.MathUtils.clamp(p, -PITCH_MAX, PITCH_MAX)
 
 export function GlobeControls({
   groupRef,
@@ -31,7 +41,10 @@ export function GlobeControls({
   const { camera, gl } = useThree()
   const drag = useRef<{ x: number; y: number } | null>(null)
   const autoSpin = useRef(!reducedMotion)
-  const targetQuat = useRef<THREE.Quaternion | null>(null)
+  // Orientation state, driven every frame into the group quaternion.
+  const yaw = useRef(0)
+  const pitch = useRef(0)
+  const target = useRef<{ yaw: number; pitch: number } | null>(null)
   const targetZ = useRef(MAX_Z)
   const zoomed = useRef(false)
 
@@ -46,17 +59,18 @@ export function GlobeControls({
       if (e.button !== 0) return
       drag.current = { x: e.clientX, y: e.clientY }
       autoSpin.current = false
-      targetQuat.current = null
+      target.current = null // grabbing overrides any in-flight rotate-to
       el.style.cursor = 'grabbing'
       el.setPointerCapture(e.pointerId)
     }
     const onMove = (e: PointerEvent) => {
-      if (!drag.current || !groupRef.current) return
+      if (!drag.current) return
       const dx = e.clientX - drag.current.x
+      const dy = e.clientY - drag.current.y
       drag.current = { x: e.clientX, y: e.clientY }
       const k = zoomed.current ? 0.0035 : 0.006
-      // Spin on the vertical axis only — no pitch/tumble (globe stays upright).
-      groupRef.current.rotateOnWorldAxis(Y_AXIS, dx * k)
+      yaw.current += dx * k // horizontal drag → longitude
+      pitch.current = clampPitch(pitch.current + dy * k) // vertical drag → latitude
     }
     const onUp = (e: PointerEvent) => {
       drag.current = null
@@ -87,12 +101,15 @@ export function GlobeControls({
 
   const api: ControlsApi = {
     rotateTo(centroid) {
-      if (!groupRef.current) return
+      // Solve the yaw/pitch that bring the centroid to front-center (0,0,1) with
+      // q = Rx(pitch)·Ry(yaw): yaw squares up longitude, pitch lifts latitude.
+      const c = centroid.clone().normalize()
+      const targetYaw = Math.atan2(-c.x, c.z)
+      const targetPitch = clampPitch(Math.atan2(c.y, Math.hypot(c.x, c.z)))
+      // Ease along the shortest path from the current (possibly large) yaw.
+      const nearYaw = targetYaw + TWO_PI * Math.round((yaw.current - targetYaw) / TWO_PI)
       autoSpin.current = false
-      targetQuat.current = new THREE.Quaternion().setFromUnitVectors(
-        centroid.clone().normalize(),
-        FRONT,
-      )
+      target.current = { yaw: nearYaw, pitch: targetPitch }
     },
     toggleZoom() {
       zoomed.current = !zoomed.current
@@ -102,7 +119,8 @@ export function GlobeControls({
     reset() {
       zoomed.current = false
       targetZ.current = MAX_Z
-      targetQuat.current = null
+      // Level the globe back to the equator view; keep current longitude.
+      target.current = { yaw: yaw.current, pitch: 0 }
       autoSpin.current = !reducedMotion
     },
   }
@@ -112,15 +130,27 @@ export function GlobeControls({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const euler = useRef(new THREE.Euler(0, 0, 0, 'XYZ'))
+
   useFrame(() => {
     const g = groupRef.current
     if (!g) return
-    if (targetQuat.current) {
-      g.quaternion.slerp(targetQuat.current, 0.09)
-      if (g.quaternion.angleTo(targetQuat.current) < 0.01) targetQuat.current = null
+    if (target.current) {
+      yaw.current += (target.current.yaw - yaw.current) * 0.09
+      pitch.current += (target.current.pitch - pitch.current) * 0.09
+      if (
+        Math.abs(target.current.yaw - yaw.current) < 0.002 &&
+        Math.abs(target.current.pitch - pitch.current) < 0.002
+      ) {
+        yaw.current = target.current.yaw
+        pitch.current = target.current.pitch
+        target.current = null
+      }
     } else if (autoSpin.current && !drag.current) {
-      g.rotateOnWorldAxis(Y_AXIS, AUTO_SPIN)
+      yaw.current += AUTO_SPIN
     }
+    euler.current.set(pitch.current, yaw.current, 0, 'XYZ')
+    g.quaternion.setFromEuler(euler.current)
     // Smooth zoom
     camera.position.z += (targetZ.current - camera.position.z) * 0.08
   })
