@@ -19,7 +19,7 @@ import { Countries, type CountryLayerApi, type GameStatus } from './scene/Countr
 import { GlobeControls, type ControlsApi } from './controls/GlobeControls'
 import { loadCountryGeometries, type CountryGeo } from './data/geo'
 
-const DATA_URL = `${import.meta.env.BASE_URL}data/countries-110m.json`
+const DATA_URL = `${import.meta.env.BASE_URL}data/countries-50m.json`
 const FILL_RADIUS = 1.002
 
 export interface GlobeApi {

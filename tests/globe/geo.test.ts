@@ -21,16 +21,16 @@ describe('normalizeGeoId', () => {
   })
 })
 
-describe('globe geometry ↔ country-id coverage', () => {
+describe('globe geometry ↔ country-id coverage (50m)', () => {
   const topo = JSON.parse(
-    readFileSync(resolve(process.cwd(), 'public/data/countries-110m.json'), 'utf8'),
-  ) as { objects: { countries: { geometries: { id: unknown }[] } } }
-  const geoIds = new Set(topo.objects.countries.geometries.map((g) => normalizeGeoId(g.id)))
+    readFileSync(resolve(process.cwd(), 'public/data/countries-50m.json'), 'utf8'),
+  ) as { objects: { countries: { geometries: { id: unknown; properties?: { name?: string } }[] } } }
+  const geoms = topo.objects.countries.geometries
+  const geoIds = new Set(geoms.map((g) => normalizeGeoId(g.id)))
+  // Kosovo ships id-less in Natural Earth; the loader rescues it by name → '383'.
+  if (geoms.some((g) => g.properties?.name === 'Kosovo')) geoIds.add('383')
 
-  it('every ISO-<100 country present in the map resolves (zero-padding regression)', () => {
-    // Big, clearly-visible countries whose numeric ISO id is < 100 — these were
-    // left grey by the geometry/game id-padding mismatch. Their normalized geometry
-    // ids must exist so they colour when guessed.
+  it('ISO-<100 countries resolve (zero-padding regression)', () => {
     const formerlyBroken: Record<string, string> = {
       '36': 'Australia', '76': 'Brazil', '32': 'Argentina', '4': 'Afghanistan',
       '12': 'Algeria', '24': 'Angola', '40': 'Austria', '56': 'Belgium',
@@ -43,11 +43,23 @@ describe('globe geometry ↔ country-id coverage', () => {
     }
   })
 
-  it('the countries the map contains all match a country-list id', () => {
+  it('microstates now render in the 50m dataset', () => {
+    const microstates: Record<string, string> = {
+      '702': 'Singapore', '470': 'Malta', '492': 'Monaco', '336': 'Vatican City',
+      '20': 'Andorra', '674': 'San Marino', '438': 'Liechtenstein', '462': 'Maldives',
+      '48': 'Bahrain', '480': 'Mauritius', '132': 'Cape Verde', '383': 'Kosovo',
+      '584': 'Marshall Islands', '583': 'Micronesia', '659': 'Saint Kitts and Nevis',
+    }
+    for (const [id, name] of Object.entries(microstates)) {
+      expect(geoIds.has(id), `50m geometry missing ${name} (id ${id})`).toBe(true)
+    }
+  })
+
+  it('nearly every sovereign country is now mappable', () => {
     const mapped = ALL_COUNTRIES.filter((c) => geoIds.has(c.id))
-    // 110m map carries ~167 of the 197 sovereign entities (microstates omitted).
-    expect(mapped.length).toBeGreaterThanOrEqual(160)
-    // A formerly-broken country resolves to a real biome colour, not the fallback.
+    // 50m carries 195 of the 197 (only Tuvalu — a tiny atoll — is absent).
+    expect(mapped.length).toBeGreaterThanOrEqual(194)
+    // A formerly-broken country still resolves to a real biome colour.
     expect(TOPO_COLOR['36']).toBeDefined()
   })
 })

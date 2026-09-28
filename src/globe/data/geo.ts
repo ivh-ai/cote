@@ -35,6 +35,15 @@ export function normalizeGeoId(raw: unknown): string {
   return String(raw ?? '').replace(/^0+(?=\d)/, '')
 }
 
+/**
+ * A few features in the Natural Earth data carry no numeric id (disputed / special
+ * status) but are guessable countries. Rescue them by name so they still resolve
+ * to their canonical id. (Kosovo ships without an id in the 50m dataset.)
+ */
+const NAME_ID_OVERRIDES: Record<string, string> = {
+  Kosovo: '383',
+}
+
 /** lon/lat (degrees) → point on a sphere of the given radius. */
 export function lonLatToVec3(lon: number, lat: number, radius: number): THREE.Vector3 {
   const phi = (90 - lat) * DEG2RAD
@@ -151,9 +160,9 @@ export async function loadCountryGeometries(
 
   const result: CountryGeo[] = []
   for (const f of fc.features as Feature[]) {
-    const id = normalizeGeoId(f.id)
+    const name = (f.properties?.name as string) ?? ''
+    const id = normalizeGeoId(f.id) || NAME_ID_OVERRIDES[name] || ''
     if (!id) continue
-    const name = (f.properties?.name as string) ?? id
     const polys = polygonsOf(f.geometry)
     if (polys.length === 0) continue
 
